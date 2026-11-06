@@ -131,3 +131,17 @@ window.addEventListener("DOMContentLoaded", () => {
   
   fetchSpaceImages(startDate, today);
 });
+// Add an event listener to the "Get Space Images" button
+const submitBtn = document.getElementById("submit-btn"); // Replace with your actual button ID if different
+if (submitBtn) {
+  submitBtn.addEventListener("click", () => {
+    const startDate = document.getElementById("start-date").value;
+    const endDate = document.getElementById("end-date").value;
+    
+    if (startDate && endDate) {
+      fetchSpaceImages(startDate, endDate);
+    } else {
+      alert("Please select both a start and end date!");
+    }
+  });
+}
