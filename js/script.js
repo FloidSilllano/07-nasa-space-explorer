@@ -121,7 +121,6 @@ window.addEventListener("click", (event) => {
     modal.style.display = "none";
     modalVideo.src = "";
   }
-});
 
 window.addEventListener("DOMContentLoaded", () => {
   displayRandomFact();
@@ -131,8 +130,10 @@ window.addEventListener("DOMContentLoaded", () => {
   
   fetchSpaceImages(startDate, today);
 });
+
 // Add an event listener to the "Get Space Images" button
-const submitBtn = document.getElementById("submit-btn"); // Replace with your actual button ID if different
+const submitBtn = document.getElementById("submit-btn"); 
+
 if (submitBtn) {
   submitBtn.addEventListener("click", () => {
     const startDate = document.getElementById("start-date").value;
