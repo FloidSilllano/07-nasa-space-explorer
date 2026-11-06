@@ -1,127 +1,21 @@
-// Array of random space facts for the LevelUp bonus
-const spaceFacts = [
-  "A day on Venus is longer than a year on Venus!",
-  "Neutron stars are so dense that a teaspoon of them would weigh about 6 billion tons.",
-  "There are more trees on Earth than stars in the Milky Way galaxy.",
-  "Because there's no atmosphere on the Moon, footprints left by astronauts will stay there for millions of years.",
-  "One day, the Andromeda Galaxy and our Milky Way will collide and merge!"
-];
-
-// Elements from the DOM
-const galleryContainer = document.getElementById("gallery-container"); 
-const loadingElement = document.getElementById("loading-message");     
-const factElement = document.getElementById("space-fact");             
-const modal = document.getElementById("image-modal");                  
+// Global variables for modals and elements
+const modal = document.getElementById("image-modal");
 const modalImage = document.getElementById("modal-image");
 const modalVideo = document.getElementById("modal-video");
 const modalTitle = document.getElementById("modal-title");
 const modalDate = document.getElementById("modal-date");
-const modalExplanation = document.getElementById("modal-explanation");
-const closeBtn = document.querySelector(".close-button");
+const modalDescription = document.getElementById("modal-description");
+const closeBtn = document.querySelector(".close");
 
-// LevelUp: Display a Random Space Fact on Load
-function displayRandomFact() {
-  if (factElement) {
-    const randomIndex = Math.floor(Math.random() * spaceFacts.length);
-    factElement.textContent = `Did You Know? ${spaceFacts[randomIndex]}`;
-  }
-}
-
-// Helper function to calculate a date 8 days ago from today (for 9 consecutive days total)
-function getStartDate(endDateStr) {
-  const date = new Date(endDateStr);
-  date.setDate(date.getDate() - 8);
-  return date.toISOString().split('T')[0];
-}
-
-// Core: Fetch 9 Consecutive Days of APOD Data
-async function fetchSpaceImages(startDate, endDate) {
-  if (loadingElement) loadingElement.style.display = "block";
-  if (galleryContainer) galleryContainer.innerHTML = "";
-
-  const apiKey = "DEMO_KEY";
-  const url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&start_date=${startDate}&end_date=${endDate}`;
-
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    if (loadingElement) loadingElement.style.display = "none";
-    
-    renderGallery(data);
-  } catch (error) {
-    console.error("Error fetching NASA APOD data:", error);
-    if (loadingElement) {
-      loadingElement.textContent = "Failed to load space images. Please try again later.";
-    }
-  }
-}
-
-// Core: Display the Gallery & LevelUp: Handle Videos + Hover Effects
-function renderGallery(items) {
-  galleryContainer.innerHTML = "";
-
-  items.forEach(item => {
-    const card = document.createElement("div");
-    card.classList.add("gallery-card"); 
-
-    let mediaContent = "";
-    if (item.media_type === "video") {
-      mediaContent = `<iframe src="${item.url}" frameborder="0" allowfullscreen class="gallery-video"></iframe>`;
-    } else {
-      mediaContent = `<img src="${item.url}" alt="${item.title}">`;
-    }
-
-    card.innerHTML = `
-      ${mediaContent}
-      <div class="card-info">
-        <h3>${item.title}</h3>
-        <p>${item.date}</p>
-      </div>
-    `;
-
-    card.addEventListener("click", () => {
-      openModal(item);
-    });
-
-    galleryContainer.appendChild(card);
-  });
-}
-
-// Core & LevelUp: Modal View Management
-function openModal(item) {
-  if (!modal) return;
-
-  modalTitle.textContent = item.title;
-  modalDate.textContent = item.date;
-  modalExplanation.textContent = item.explanation;
-
-  if (item.media_type === "video") {
-    modalImage.style.display = "none";
-    modalVideo.style.display = "block";
-    modalVideo.src = item.url;
-  } else {
-    modalVideo.style.display = "none";
-    modalImage.style.display = "block";
-    modalImage.src = item.hdurl || item.url;
-  }
-
-  modal.style.display = "block";
-}
-
+// Close modal when clicking the X button
 if (closeBtn) {
   closeBtn.addEventListener("click", () => {
     modal.style.display = "none";
-    modalVideo.src = ""; 
+    modalVideo.src = "";
   });
 }
 
-window.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    modal.style.display = "none";
-    modalVideo.src = "";
-  }
-
+// Close modal when clicking anywhere outside the modal content
 window.addEventListener("click", (event) => {
   if (event.target === modal) {
     modal.style.display = "none";
@@ -129,6 +23,103 @@ window.addEventListener("click", (event) => {
   }
 });
 
+// Helper function to get start date 9 days prior to today
+function getStartDate(todayStr) {
+  const date = new Date(todayStr);
+  date.setDate(date.getDate() - 8); // 9 days total including today
+  return date.toISOString().split('T')[0];
+}
+
+// Fetch space images from NASA APOD API
+async function fetchSpaceImages(startDate, endDate) {
+  const apiKey = "DEMO_KEY"; // Replace with your NASA API key if needed
+  const url = `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&start_date=${startDate}&end_date=${endDate}`;
+  
+  const loadingElement = document.getElementById("loading");
+  const galleryContainer = document.getElementById("gallery-container");
+  
+  if (loadingElement) loadingElement.style.display = "block";
+  if (galleryContainer) galleryContainer.innerHTML = "";
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (loadingElement) loadingElement.style.display = "none";
+    
+    if (Array.isArray(data)) {
+      data.forEach(item => {
+        createGalleryCard(item);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching NASA data:", error);
+    if (loadingElement) loadingElement.style.display = "none";
+  }
+}
+
+// Create individual gallery items
+function createGalleryCard(item) {
+  const galleryContainer = document.getElementById("gallery-container");
+  if (!galleryContainer) return;
+
+  const card = document.createElement("div");
+  card.className = "gallery-card";
+
+  // Handle images vs videos for LevelUp
+  let mediaElement = "";
+  if (item.media_type === "video") {
+    mediaElement = `<iframe src="${item.url}" frameborder="0" allowfullscreen></iframe>`;
+  } else {
+    mediaElement = `<img src="${item.url}" alt="${item.title}">`;
+  }
+
+  card.innerHTML = `
+    ${mediaElement}
+    <div class="card-info">
+      <h3>${item.title}</h3>
+      <p>${item.date}</p>
+    </div>
+  `;
+
+  // Open modal on click
+  card.addEventListener("click", () => {
+    modal.style.display = "block";
+    modalTitle.textContent = item.title;
+    modalDate.textContent = item.date;
+    modalDescription.textContent = item.explanation;
+
+    if (item.media_type === "video") {
+      modalImage.style.display = "none";
+      modalVideo.style.display = "block";
+      modalVideo.src = item.url;
+    } else {
+      modalVideo.style.display = "none";
+      modalImage.style.display = "block";
+      modalImage.src = item.url;
+    }
+  });
+
+  galleryContainer.appendChild(card);
+}
+
+// Display random fact on load (Bonus / LevelUp)
+function displayRandomFact() {
+  const facts = [
+    "A day on Venus is longer than a year on Venus.",
+    "Neutron stars can spin at a rate of 600 rotations per second.",
+    "There are more trees on Earth than stars in the Milky Way.",
+    "The footprints left on the Moon by Apollo astronauts will stay there for millions of years."
+  ];
+  
+  const factContainer = document.getElementById("fact-container");
+  if (factContainer) {
+    const randomFact = facts[Math.floor(Math.random() * facts.length)];
+    factContainer.textContent = `Did you know? ${randomFact}`;
+  }
+}
+
+// Initial load events
 window.addEventListener("DOMContentLoaded", () => {
   displayRandomFact();
   
@@ -141,7 +132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 // Add an event listener to the "Get Space Images" button
 const submitBtn = document.getElementById("submit-btn"); 
 
-if (submitBtn) {
+if (submitBtn) 
   submitBtn.addEventListener("click", () => {
     const startDate = document.getElementById("start-date").value;
     const endDate = document.getElementById("end-date").value;
@@ -152,4 +143,3 @@ if (submitBtn) {
       alert("Please select both a start and end date!");
     }
   });
-}
