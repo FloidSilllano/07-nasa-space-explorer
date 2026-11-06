@@ -122,6 +122,13 @@ window.addEventListener("click", (event) => {
     modalVideo.src = "";
   }
 
+window.addEventListener("click", (event) => {
+  if (event.target === modal) {
+    modal.style.display = "none";
+    modalVideo.src = "";
+  }
+});
+
 window.addEventListener("DOMContentLoaded", () => {
   displayRandomFact();
   
